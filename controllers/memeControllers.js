@@ -1,7 +1,7 @@
-import axios from 'axios';
-import { argParse } from '../utils/argParse.js';
-import { createMemeEmbed } from '../utils/memeEmbed.js'
-import { randInt } from '../utils/math.js';
+import axios from "axios";
+import { argParse } from "../utils/argParse.js";
+import { createMemeEmbed } from "../utils/memeEmbed.js";
+import { randInt } from "../utils/math.js";
 
 /**
  * Get the latest meme and send a message
@@ -13,8 +13,8 @@ import { randInt } from '../utils/math.js';
 const newestMeme = async (msg) => {
   const { data } = await axios.get(`${process.env.BASE}/api/memes/@bot/newest`);
   const memeURI = encodeURI(`${process.env.BASE}${data.imgURL}`);
-  createMemeEmbed(msg, 'Latest Meme', data, memeURI);
-}
+  createMemeEmbed(msg, "Latest Meme", data, memeURI);
+};
 
 /**
  * Get the most popular meme and send a message
@@ -25,10 +25,12 @@ const newestMeme = async (msg) => {
  */
 
 const popularMeme = async (msg) => {
-  const { data } = await axios.get(`${process.env.BASE}/api/memes/@bot/popular`);
+  const { data } = await axios.get(
+    `${process.env.BASE}/api/memes/@bot/popular`
+  );
   const memeURI = encodeURI(`${process.env.BASE}${data.imgURL}`);
-  createMemeEmbed(msg, 'Top Meme', data, memeURI);
-}
+  createMemeEmbed(msg, "Top Meme", data, memeURI);
+};
 
 /**
  * Get n number of best memes in a time period
@@ -40,34 +42,47 @@ const popularMeme = async (msg) => {
 
 const bestMemeByRange = async (msg) => {
   try {
-    const { start, end, count } = argParse(msg.content.split('$meme leaders')[1]);
+    const { start, end, count } = argParse(
+      msg.content.split("$meme leaders")[1]
+    );
     if (start && end) {
       const n = count && count > 3 ? 3 : count ? count : 1;
-      console.log(n)
+      console.log(n);
       const config = {
         headers: {
-          'Content-Type': 'application/json'
-        }
-      }
-      const { data } = await axios.post(`${process.env.BASE}/api/memes/@bot/popular`, {
-        start,
-        end
-      }, config).catch((error) => {
-        console.log(error);
-      });
+          "Content-Type": "application/json",
+        },
+      };
+      const { data } = await axios
+        .post(
+          `${process.env.BASE}/api/memes/@bot/popular`,
+          {
+            start,
+            end,
+          },
+          config
+        )
+        .catch((error) => {
+          console.log(error);
+        });
       const memeLeaders = data.slice(0, n);
       memeLeaders.map((meme) => {
         const memeURI = encodeURI(`${process.env.BASE}${meme.imgURL}`);
-        createMemeEmbed(msg, `Rank ${memeLeaders.indexOf(meme) + 1}`, meme, memeURI);
+        createMemeEmbed(
+          msg,
+          `Rank ${memeLeaders.indexOf(meme) + 1}`,
+          meme,
+          memeURI
+        );
       });
     } else {
-      throw new Error('invalid params');
+      throw new Error("invalid params");
     }
   } catch (error) {
     console.log(error);
-    msg.channel.send('incorrect parameters passed, please try again.');
+    msg.channel.send("incorrect parameters passed, please try again.");
   }
-}
+};
 
 /**
  * get a random meme :)
@@ -85,9 +100,9 @@ const getRandomMeme = async (msg) => {
     createMemeEmbed(msg, `Random Meme...`, randomMeme, memeURI);
   } catch (error) {
     console.log(error);
-    msg.channel.send('unable to get memes :(')
+    msg.channel.send("unable to get memes :(");
   }
-}
+};
 
 /**
  * search for a meme
@@ -99,26 +114,30 @@ const getRandomMeme = async (msg) => {
 const searchTagMeme = async (msg) => {
   try {
     const memes = await axios.get(`${process.env.BASE}/api/memes`);
-    const query = msg.content.split('$meme search ')[1];
+    const query = msg.content.split("$meme search ")[1];
     if (query) {
-      const searchedMemes = memes.data.filter((meme) => JSON.stringify(meme.memeTags).includes(query));
+      const searchedMemes = memes.data.filter((meme) =>
+        JSON.stringify(meme.memeTags)
+          .toLowerCase()
+          .includes(query.toLowerCase())
+      );
       const rand = randInt(0, searchedMemes.length - 1);
       const searchedMeme = searchedMemes[rand];
       const memeURI = encodeURI(`${process.env.BASE}${searchedMeme.imgURL}`);
       createMemeEmbed(msg, `#${query}`, searchedMeme, memeURI);
     } else {
-      throw new Error('no query specified');
+      throw new Error("no query specified");
     }
   } catch (error) {
-    console.log(error)
-    msg.channel.send('unable to lookup the requested tag');
+    console.log(error);
+    msg.channel.send("unable to lookup the requested tag");
   }
-}
+};
 
 export {
   newestMeme,
   popularMeme,
   bestMemeByRange,
   getRandomMeme,
-  searchTagMeme
+  searchTagMeme,
 };
